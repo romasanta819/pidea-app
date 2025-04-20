@@ -1,39 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
-interface Medida {
-  id: string;
-  titulo: string;
-  votos: number;
-}
+type Medida = { nombre: string; votos: number; };
 
-export default function RankingMedidas() {
+const medidasIniciales: Medida[] = [
+  { nombre: 'Gasto público', votos: 10 },
+  { nombre: 'Tasa de interés', votos: 8 },
+  { nombre: 'Importaciones', votos: 5 },
+  { nombre: 'Exportaciones', votos: 12 },
+  { nombre: 'Impuestos', votos: 7 },
+];
+
+export default function Ranking() {
   const [medidas, setMedidas] = useState<Medida[]>([]);
 
   useEffect(() => {
-    // Cargar ranking desde localStorage o API
-    const almacen = JSON.parse(localStorage.getItem('rankingPIDIA') || '[]');
-    const inicial: Medida[] = almacen.length ? almacen : [
-      { id: '1', titulo: 'Aumentar gasto público', votos: 12 },
-      { id: '2', titulo: 'Reducir impuestos', votos: 9 },
-      { id: '3', titulo: 'Cerrar importaciones', votos: 7 },
-      { id: '4', titulo: 'Fomentar exportaciones', votos: 5 }
-    ];
-    // Ordenar descendente por votos
-    const ordenado = inicial.sort((a, b) => b.votos - a.votos);
-    setMedidas(ordenado);
+    const stored = JSON.parse(localStorage.getItem('rankingPIDIA') || 'null');
+    setMedidas(stored ?? medidasIniciales);
   }, []);
 
+  const sorted = [...medidas].sort((a, b) => b.votos - a.votos);
+
   return (
-    <main className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">🏅 Ranking de Medidas</h1>
-      <ul className="space-y-4">
-        {medidas.map((m, idx) => (
+    <main className="p-8 max-w-2xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">🏆 Ranking de Medidas</h1>
+      <ul className="space-y-2">
+        {sorted.map((m, i) => (
           <li
-            key={m.id}
-            className="flex justify-between items-center p-4 border rounded hover:bg-gray-50"
+            key={i}
+            className="flex justify-between p-4 bg-white rounded shadow"
           >
-            <span className="font-medium">{idx + 1}. {m.titulo}</span>
-            <span className="text-blue-600 font-bold">{m.votos} votos</span>
+            <span>{m.nombre}</span>
+            <span className="font-bold">{m.votos} votos</span>
           </li>
         ))}
       </ul>
