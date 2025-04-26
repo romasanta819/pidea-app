@@ -1,48 +1,84 @@
-const noticiasEjemplo = [
+// pages/noticias.tsx
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+
+interface Noticia {
+  id: number;
+  titulo: string;
+  resumen: string;
+  fecha: string;       // ISO date string
+  verificado: boolean; // true si la IA confirmó la veracidad
+  enlace: string;      // URL al artículo original
+}
+
+const noticiasIniciales: Noticia[] = [
   {
     id: 1,
-    titulo: 'Informe de inflación publicado por el INDEC',
-    fuente: 'INDEC',
-    verificada: true
+    titulo: 'Nueva reforma laboral aprobada',
+    resumen: 'La cámara de diputados sancionó hoy una reforma histórica que…',
+    fecha: '2025-04-10',
+    verificado: true,
+    enlace: 'https://fuenteoficial.gob.ar/reforma-laboral'
   },
   {
     id: 2,
-    titulo: 'Proyecto de ley de reforma tributaria presentado',
-    fuente: 'Congreso de la Nación',
-    verificada: true
+    titulo: 'Protestas en la capital por incremento de tarifas',
+    resumen: 'Miles de personas se movilizaron para reclamar una revisión…',
+    fecha: '2025-04-09',
+    verificado: false,
+    enlace: 'https://diariosindical.com/protestas-tarifas'
   },
   {
     id: 3,
-    titulo: 'Rumores de default según un blog sin verificar',
-    fuente: 'Blog anónimo',
-    verificada: false
-  }
+    titulo: 'Descubrimiento científico mejora expectativa de vida',
+    resumen: 'Un estudio internacional revela un tratamiento que…',
+    fecha: '2025-04-08',
+    verificado: true,
+    enlace: 'https://revistacientifica.org/vida-mejorada'
+  },
 ];
 
 export default function Noticias() {
-  return (
-    <main className="p-8 max-w-2xl mx-auto text-center">
-      <h1 className="text-3xl font-bold mb-6">📰 Noticias verificadas por IA</h1>
-      <p className="mb-4">Accedé a contenido político validado por fuentes oficiales y chequeado por inteligencia artificial.</p>
+  const [noticias, setNoticias] = useState<Noticia[]>([]);
 
-      <ul className="text-left">
-        {noticiasEjemplo.map((n) => (
-          <li
-            key={n.id}
-            className={`mb-3 p-4 border rounded shadow-sm ${
-              n.verificada ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-            }`}
-          >
-            <p className="font-medium">{n.titulo}</p>
-            <p className="text-sm text-gray-600">Fuente: {n.fuente}</p>
-            <p className={`text-xs font-semibold ${
-              n.verificada ? 'text-green-700' : 'text-red-700'
-            }`}>
-              {n.verificada ? '✔ Verificada' : '✖ No verificada'}
-            </p>
-          </li>
-        ))}
-      </ul>
+  useEffect(() => {
+    // Simulamos carga desde un API o localStorage
+    setNoticias(noticiasIniciales);
+  }, []);
+
+  return (
+    <main className="p-8 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">📰 Noticias Verificadas por IA</h1>
+      {noticias.map((n) => (
+        <article key={n.id} className="mb-6 p-6 bg-white rounded-lg shadow-md">
+          <header className="flex items-center justify-between mb-2">
+            <h2 className="text-2xl font-semibold">{n.titulo}</h2>
+            {n.verificado ? (
+              <span className="flex items-center text-green-600 font-medium">
+                ✅ Verificado
+              </span>
+            ) : (
+              <span className="flex items-center text-red-600 font-medium">
+                ❌ No verificado
+              </span>
+            )}
+          </header>
+          <p className="text-gray-700 mb-4">{n.resumen}</p>
+          <footer className="flex items-center justify-between text-sm text-gray-500">
+            <time dateTime={n.fecha}>
+              {new Date(n.fecha).toLocaleDateString()}
+            </time>
+            <a
+              href={n.enlace}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-blue-600"
+            >
+              Leer más
+            </a>
+          </footer>
+        </article>
+      ))}
     </main>
-  );
+);
 }
