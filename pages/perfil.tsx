@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface Accion {
   accion: string;
@@ -10,7 +10,8 @@ export default function Perfil() {
   const [historial, setHistorial] = useState<Accion[]>([]);
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('historialPIDIA') || '[]');
+    const raw = localStorage.getItem('historialPIDIA');
+    const data: Accion[] = raw ? JSON.parse(raw) as Accion[] : [];
     setHistorial(data);
   }, []);
 
@@ -18,10 +19,12 @@ export default function Perfil() {
     <main className="p-8 max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">👤 Mi Perfil</h1>
       <div className="flex items-center mb-6">
-        <img
+        <Image
           src="/avatar.png"
           alt="Mi avatar"
-          className="w-16 h-16 rounded-full mr-4"
+          width={64}
+          height={64}
+          className="rounded-full mr-4"
         />
         <div>
           <p className="font-semibold">Leonardo Amilcar Romasanta</p>
@@ -41,6 +44,5 @@ export default function Perfil() {
         </ul>
       )}
     </main>
-);
+  );
 }
-
