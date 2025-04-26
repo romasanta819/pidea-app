@@ -1,3 +1,4 @@
+// pages/simulador.tsx
 import { useState } from 'react';
 import {
   LineChart,
@@ -9,7 +10,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-// 1) Definimos el tipo de dato en lugar de any
+// Definimos el tipo en lugar de any
 interface PuntoSim {
   nombre: string;
   pobreza: number;
@@ -27,11 +28,10 @@ const variables = [
 const acciones = ['Aumentar', 'Disminuir'];
 
 export default function Simulador() {
-  // 2) Usamos PuntoSim[] en lugar de any[]
-  const [variable, setVariable]     = useState<string>('');
-  const [accion, setAccion]         = useState<string>('');
-  const [resultado, setResultado]   = useState<string>('');
-  const [datos, setDatos]           = useState<PuntoSim[]>([]);
+  const [variable, setVariable]   = useState<string>('');
+  const [accion, setAccion]       = useState<string>('');
+  const [resultado, setResultado] = useState<string>('');
+  const [datos, setDatos]         = useState<PuntoSim[]>([]);
 
   const simular = () => {
     if (!variable || !accion) {
@@ -42,7 +42,7 @@ export default function Simulador() {
     const mensaje = `Simulación: ${accion.toLowerCase()} ${variable.toLowerCase()}`;
     setResultado(`${mensaje}. (Simulación en desarrollo)`);
 
-    // 3) Generamos la curva tipada como PuntoSim[]
+    // Generamos la curva tipada como PuntoSim[]
     const base = [100, 102, 105, 107, 110, 112, 115];
     const multiplicador = accion === 'Aumentar' ? 1.1 : 0.9;
     const curva: PuntoSim[] = base.map((valor, i) => ({
