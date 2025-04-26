@@ -24,7 +24,12 @@ export default function Simulador() {
   const [variable, setVariable] = useState('');
   const [accion, setAccion] = useState('');
   const [resultado, setResultado] = useState('');
-  const [datos, setDatos] = useState<any[]>([]);
+  const [datos, setDatos] = useState<{
+    nombre: string;
+    pobreza: number;
+    empleo: number;
+    reservas: number;
+}[]>([]);
 
   const simular = () => {
     if (!variable || !accion) {
