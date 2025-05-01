@@ -1,7 +1,7 @@
 // pages/noticias.tsx
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import { useEffect, useState } from 'react'; // Queda la importación limpia
 
+// Queda la interfaz de 'main' con el campo 'enlace'
 interface Noticia {
   id: number;
   titulo: string;
@@ -11,6 +11,7 @@ interface Noticia {
   enlace: string;      // URL al artículo original
 }
 
+// Quedan los datos de ejemplo de 'main'
 const noticiasIniciales: Noticia[] = [
   {
     id: 1,
@@ -42,12 +43,14 @@ export default function Noticias() {
   const [noticias, setNoticias] = useState<Noticia[]>([]);
 
   useEffect(() => {
+    // Queda el comentario de 'main'
     // Simulamos carga desde un API o localStorage
     setNoticias(noticiasIniciales);
   }, []);
 
   return (
     <main className="p-8 max-w-4xl mx-auto">
+      {/* Queda la estructura JSX de 'main' */}
       <h1 className="text-3xl font-bold mb-6">📰 Noticias Verificadas por IA</h1>
       {noticias.map((n) => (
         <article key={n.id} className="mb-6 p-6 bg-white rounded-lg shadow-md">
@@ -80,5 +83,5 @@ export default function Noticias() {
         </article>
       ))}
     </main>
-);
+  );
 }
