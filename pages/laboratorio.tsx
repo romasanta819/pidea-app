@@ -13,7 +13,7 @@ import {
   mockHistoricalData,
   getAvailableVariables,
   VARIABLES_HISTORICAS_NOMBRES, // Para obtener nombres amigables
-  TimePoint // Importamos el tipo si lo exportaste, o lo definimos aquí si no
+  type TimePoint // Importamos el tipo si lo exportaste, o lo definimos aquí si no
 } from '../data/mockHistoricalData'; // Ajusta la ruta si tu carpeta data no está en la raíz
 
 // Interfaz para la estructura de datos que usará el gráfico
