@@ -50,7 +50,7 @@ export default function Laboratorio() {
 
       // Asumiendo que los periodos se alinean perfectamente en nuestros datos mock.
       // En un caso real, necesitaríamos una lógica de fusión más robusta.
-      const formattedData: ChartDataPoint[] = data1.map((point1, index) => {
+      const formattedData: ChartDataPoint[] = data1.map((point1: TimePoint, index) => {
         const point2 = data2[index]; // Asumimos mismo índice = mismo periodo
         return {
           periodo: point1.periodo,
