@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -6,162 +6,120 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
-  Legend // Añadimos Legend para mostrar nombres de líneas
 } from 'recharts';
-import {
-  mockHistoricalData,
-  getAvailableVariables,
-  VARIABLES_HISTORICAS_NOMBRES, // Para obtener nombres amigables
-  type TimePoint // Importamos el tipo si lo exportaste, o lo definimos aquí si no
-} from '../data/mockHistoricalData'; // Ajusta la ruta si tu carpeta data no está en la raíz
+import { ipcHistoricalData, IpcDataPoint } from '../data/ipcData';
 
-// Interfaz para la estructura de datos que usará el gráfico
-// Cada punto tendrá el periodo y un valor por cada variable seleccionada
-interface ChartDataPoint {
-  periodo: string;
-  [variableId: string]: number | string | null; // Claves dinámicas para valores de variables, permitimos null
-}
+// Función que convierte el número de serie de la hoja de cálculo a una fecha de JavaScript.
+// La fórmula es (NumeroDeSerie - 25569) * 86400 * 1000 para obtener el timestamp de Unix.
+const convertSerialToTimestamp = (serial: any): number | null => {
+  const serialNumber = typeof serial === 'string' ? parseInt(serial, 10) : serial;
+  if (isNaN(serialNumber) || serialNumber === null) return null;
+  // Esta es la conversión matemática correcta
+  return Math.round((serialNumber - 25569) * 86400 * 1000);
+};
 
-export default function Laboratorio() {
-  // Estado para los IDs de las dos variables seleccionadas
-  const [selectedVar1, setSelectedVar1] = useState<string>('');
-  const [selectedVar2, setSelectedVar2] = useState<string>('');
+// Formateadores para el gráfico
+const formatTooltipValue = (value: number | null) => {
+  if (value === null) return "No disponible";
+  if (value < 1 && value > 0) return value.toExponential(4);
+  return value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
 
-  // Estado para guardar los datos formateados para Recharts
-  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+const formatXAxis = (timestamp: number) => new Date(timestamp).getFullYear().toString();
 
-  // Obtenemos la lista de variables disponibles para los selectores
-  const availableVariables = getAvailableVariables();
+export default function LaboratorioPidia() {
+  // 1. Convertimos la "fecha" (que es un número de serie) a un timestamp que Recharts entiende.
+  // 2. Filtramos cualquier dato que no se haya podido convertir.
+  const processedData = useMemo(() =>
+    ipcHistoricalData
+      .map(d => ({
+        ...d,
+        timestamp: convertSerialToTimestamp(d.fecha), // Usamos la función de conversión
+      }))
+      .filter(d => d.timestamp !== null && typeof d.valor === 'number'),
+    []
+  );
 
-  // --- Hook useEffect para procesar datos cuando cambian las selecciones ---
-  useEffect(() => {
-    // Solo proceder si dos variables DIFERENTES están seleccionadas
-    if (selectedVar1 && selectedVar2 && selectedVar1 !== selectedVar2) {
-      const data1 = mockHistoricalData[selectedVar1];
-      const data2 = mockHistoricalData[selectedVar2];
+  // Genera las marcas para cada década en el eje X
+  const yearlyTicks = useMemo(() => {
+    if (!processedData || processedData.length === 0) return [];
+    const ticks: number[] = [];
+    const displayedYears = new Set<number>();
 
-      // Comprobación básica si los datos existen
-      if (!data1 || !data2) {
-        console.error("Datos históricos no encontrados para:", selectedVar1, selectedVar2);
-        setChartData([]);
-        return;
-      }
+    processedData.forEach(d => {
+        if(d.timestamp){
+            const year = new Date(d.timestamp).getFullYear();
+            if (year % 10 === 0 && !displayedYears.has(year)) {
+                ticks.push(d.timestamp);
+                displayedYears.add(year);
+            }
+        }
+    });
 
-      // Asumiendo que los periodos se alinean perfectamente en nuestros datos mock.
-      // En un caso real, necesitaríamos una lógica de fusión más robusta.
-      const formattedData: ChartDataPoint[] = data1.map((point1: TimePoint, index) => {
-        const point2 = data2[index]; // Asumimos mismo índice = mismo periodo
-        return {
-          periodo: point1.periodo,
-          // Usamos los IDs de las variables seleccionadas como claves dinámicas
-          [selectedVar1]: point1.valor,
-          [selectedVar2]: point2 ? point2.valor : null, // Usamos null si no hay punto correspondiente
-        };
-      });
-
-      setChartData(formattedData);
-    } else {
-      // Si no hay dos variables diferentes seleccionadas, limpiar los datos del gráfico
-      setChartData([]);
+    if(processedData.length > 0 && processedData[processedData.length-1].timestamp){
+        const lastTick = processedData[processedData.length - 1].timestamp;
+        if(!ticks.includes(lastTick)){
+            ticks.push(lastTick);
+        }
     }
-  }, [selectedVar1, selectedVar2]); // Dependencias: el efecto se re-ejecuta si cambia alguna selección
 
-  // Definimos algunos colores para las líneas del gráfico
-  const lineColors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#387908"];
-  // Podríamos asignar colores de forma más inteligente si tuviéramos más líneas
+    return ticks.sort((a, b) => a - b);
+  }, [processedData]);
 
   return (
-    <main className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center">
-        🔬 Laboratorio PIDIA - Comparador Histórico (Simulado)
-      </h1>
-
-      {/* --- Controles de Selección (Sin cambios respecto al anterior) --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 p-4 bg-gray-50 rounded shadow">
-        <div>
-          <label htmlFor="variable1" className="block mb-1 font-semibold text-gray-700">
-            Seleccioná la primera variable:
-          </label>
-          <select
-            id="variable1"
-            value={selectedVar1}
-            onChange={(e) => setSelectedVar1(e.target.value)} // Simplificado, el useEffect se encarga
-            className="w-full p-2 border border-gray-300 rounded bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">-- Elegir Variable 1 --</option>
-            {availableVariables.map(v => (
-              <option key={v.id} value={v.id}>
-                {v.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="variable2" className="block mb-1 font-semibold text-gray-700">
-            Seleccioná la segunda variable:
-          </label>
-          <select
-            id="variable2"
-            value={selectedVar2}
-            onChange={(e) => setSelectedVar2(e.target.value)} // Simplificado
-            className="w-full p-2 border border-gray-300 rounded bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">-- Elegir Variable 2 --</option>
-            {availableVariables.map(v => (
-              <option key={v.id} value={v.id} disabled={v.id === selectedVar1}>
-                {v.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* --- Área del Gráfico --- */}
-      <div className="mt-6 bg-white p-4 rounded shadow">
-        <h2 className="text-xl font-semibold mb-4 text-center text-gray-800">Comparación Histórica</h2>
-        {(selectedVar1 && selectedVar2) ? (
-          <ResponsiveContainer width="100%" height={400}>
-            {/* --- AHORA SÍ: El componente LineChart --- */}
+    <main className="p-4 md:p-8 max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold mb-8 text-center">🔬 Laboratorio PIDIA</h1>
+      <section className="mt-8 bg-white p-4 rounded-lg shadow-md">
+        <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+          Serie Histórica del IPC de Argentina (1943 - Presente)
+        </h2>
+        <p className="text-center text-gray-600 mb-6">
+          Índice empalmado (Base Dic 2016 = 100). Eje Y en escala logarítmica.
+        </p>
+        <div style={{ width: '100%', height: 500 }}>
+          <ResponsiveContainer>
             <LineChart
-              data={chartData} // Usamos los datos procesados por useEffect
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              data={processedData}
+              margin={{ top: 5, right: 30, left: 20, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="periodo" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              {/* Linea para la primera variable seleccionada (si existe) */}
-              {selectedVar1 && (
-                <Line
-                  type="monotone"
-                  dataKey={selectedVar1} // El ID de la variable es la clave de los datos
-                  stroke={lineColors[0]}   // Primer color
-                  name={VARIABLES_HISTORICAS_NOMBRES[selectedVar1]} // Nombre para la leyenda
-                  dot={false}
-                  connectNulls={true} // Conectar línea aunque haya datos null
-                />
-              )}
-              {/* Linea para la segunda variable seleccionada (si existe) */}
-              {selectedVar2 && (
-                <Line
-                  type="monotone"
-                  dataKey={selectedVar2} // El ID de la variable es la clave de los datos
-                  stroke={lineColors[1]}   // Segundo color
-                  name={VARIABLES_HISTORICAS_NOMBRES[selectedVar2]} // Nombre para la leyenda
-                  dot={false}
-                  connectNulls={true}
-                />
-              )}
+              <XAxis
+                dataKey="timestamp"
+                type="number"
+                scale="time"
+                domain={['dataMin', 'dataMax']}
+                ticks={yearlyTicks}
+                tickFormatter={formatXAxis}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis
+                scale="log"
+                domain={[1e-12, 'auto']}
+                allowDataOverflow={true}
+                width={80}
+              />
+              <Tooltip
+                labelFormatter={(timestamp) => new Date(timestamp).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', timeZone: 'UTC' })}
+                formatter={(value: number, name: string) => [formatTooltipValue(value), name]}
+              />
+              <Legend verticalAlign="top" height={36}/>
+              <Line
+                type="monotone"
+                dataKey="valor"
+                name="Valor del Índice IPC"
+                stroke="#4f46e5"
+                strokeWidth={2}
+                dot={false}
+                connectNulls={true}
+              />
             </LineChart>
           </ResponsiveContainer>
-        ) : (
-          <p className="text-center text-gray-500 py-16">
-            Por favor, seleccioná dos variables diferentes para comparar sus series históricas simuladas.
-          </p>
-        )}
-      </div>
+        </div>
+      </section>
     </main>
   );
 }
