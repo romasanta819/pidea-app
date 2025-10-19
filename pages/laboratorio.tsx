@@ -479,7 +479,7 @@ const propagateShockAutomatic = (
 ): { ipc: number, desempleo: number, inversion_bruta: number, pobreza: number } => {
     
     const otherVariables = activeFactors.filter(v => v !== changedVariable);
-    let newFactors: { ipc: number, desempleo: number, inversion_bruta: number } = { ...currentFactors };
+    const newFactors: { ipc: number, desempleo: number, inversion_bruta: number } = { ...currentFactors };
 
     // 1. Calcular la magnitud del cambio en Z-scores
     const zChangeMagnitude = shockMetric(changedVariable, currentFactors[changedVariable], metrics) - 
@@ -494,7 +494,6 @@ const propagateShockAutomatic = (
         const ridgeCoeff = metrics.ridgeCoefficients[targetVar][changedVariable];
         
         // Método 3: Predicción VAR (dependencias temporales)
-        const varPrediction = predictWithVAR(metrics.varCoefficients, currentFactors, targetVar);
         const varCoeff = metrics.varCoefficients[targetVar][changedVariable];
         
         // Combinar métodos con pesos (puedes ajustar estos pesos)
@@ -519,7 +518,6 @@ const propagateShockAutomatic = (
         
         // 4. Aplicar límites y actualizar
         if (!isNaN(newValue) && isFinite(newValue)) {
-            // @ts-ignore
             newFactors[targetVar] = Math.max(varRangeMap[targetVar].min, Math.min(varRangeMap[targetVar].max, newValue));
         }
     }
@@ -536,6 +534,7 @@ const propagateShockAutomatic = (
  * IMPLEMENTA LA VISIÓN ESTRATÉGICA: CORRELACIÓN CRUZADA
  * @deprecated - Reemplazado por propagateShockAutomatic
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const propagateShockAndCompensate = (
     metrics: TrainingMetrics,
     currentFactors: { ipc: number, desempleo: number, inversion_bruta: number }, 
@@ -567,7 +566,7 @@ const propagateShockAndCompensate = (
     } 
 
     // 2. CALCULAR AJUSTES PARA LAS OTRAS DOS VARIABLES
-    let newFactors: { ipc: number, desempleo: number, inversion_bruta: number } = { ...currentFactors };
+    const newFactors: { ipc: number, desempleo: number, inversion_bruta: number } = { ...currentFactors };
 
     // Usamos el factor de Shock para mover las variables compensatorias
     for (const name of compensatingFactors) {
@@ -597,7 +596,6 @@ const propagateShockAndCompensate = (
 
         // 3. Aplicar Límites
         if (!isNaN(newValue) && isFinite(newValue)) {
-            // @ts-ignore
             newFactors[name] = Math.max(varRangeMap[name].min, Math.min(varRangeMap[name].max, newValue));
         } else {
             return null;
@@ -616,7 +614,7 @@ const propagateShockAndCompensate = (
 // -------------------------------------------------------------------
 
 // Logística para rellenar el hueco
-const fillHistoricalData = (data: PideaDataPoint[], metrics: TrainingMetrics): PideaDataPoint[] => {
+const fillHistoricalData = (data: PideaDataPoint[]): PideaDataPoint[] => {
     // La data ya es continua, no hay hueco que rellenar
     return data;
 }
@@ -659,7 +657,6 @@ const PovertyChart: React.FC<ChartProps> = ({ data, simulationData, metrics }) =
     const drawLine = (name: VariableName) => {
         // Generar la ruta histórica normalizada
         const historyPath = data.map((d, i) => {
-            // @ts-ignore
             const normalizedY = normalizeValue(d[name], name, metrics.normalization);
             const x = scaleX(d.anio);
             const y = scaleY(normalizedY);
@@ -668,9 +665,7 @@ const PovertyChart: React.FC<ChartProps> = ({ data, simulationData, metrics }) =
 
         // Generar el punto de proyección
         const lastDataPoint = data[data.length - 1];
-        // @ts-ignore
         const lastNormalizedY = normalizeValue(lastDataPoint[name], name, metrics.normalization);
-        // @ts-ignore
         const currentNormalizedY = normalizeValue(simulationData[name], name, metrics.normalization);
         
         const lastX = scaleX(lastDataPoint.anio);
@@ -733,7 +728,6 @@ const PovertyChart: React.FC<ChartProps> = ({ data, simulationData, metrics }) =
 
                 {/* Dibujar las 3 Curvas Activas */}
                 {variablesToDraw.map(name => (
-                    // @ts-ignore
                     drawLine(name)
                 ))}
 
@@ -765,11 +759,10 @@ const Laboratorio = () => {
         pobreza: LAST_DATA_POINT.pobreza || 31.6, // Se mantiene solo para el output inicial
     });
     
-    const [correlations, setCorrelations] = useState({ ipc: 0, desempleo: 0, inversion_bruta: 0, pobreza: 0 }); 
     const [lastChangedVariable, setLastChangedVariable] = useState<FactorName | null>(null); 
     
     const trainingMetrics = useMemo(() => getTrainingMetrics(INITIAL_RAW_DATA), []);
-    const filledHistoricalData = useMemo(() => fillHistoricalData(INITIAL_RAW_DATA, trainingMetrics), [trainingMetrics]);
+    const filledHistoricalData = useMemo(() => fillHistoricalData(INITIAL_RAW_DATA), []);
     
     // --- LÓGICA CLAVE DE CÁLCULO ---
     const calculateSimulation = useCallback((data: typeof simulationData, changedVar: FactorName | null) => {
@@ -793,9 +786,6 @@ const Laboratorio = () => {
     
     // 3. useEffect principal para la predicción dinámica automática
     useEffect(() => {
-        // @ts-ignore
-        setCorrelations(trainingMetrics.correlations);
-        
         // PROPAGACIÓN AUTOMÁTICA: Cualquier cambio en una variable dispara ajuste automático
         setSimulationData(prev => {
             const { newSimulationData } = calculateSimulation(prev, lastChangedVariable);
@@ -1007,7 +997,6 @@ const Laboratorio = () => {
                 
                 {/* Controles de Variables */}
                 {activeFactors.map(name => (
-                    // @ts-ignore
                     <VariableControl key={name} name={name} />
                 ))}
                 
