@@ -49,7 +49,6 @@ type VariableName = FactorName | OutputName;
 
 // Definiciones de variables globales para React y lógica
 const activeFactors: FactorName[] = ['ipc', 'desempleo', 'inversion_bruta'];
-const allVariables: VariableName[] = ['pobreza', 'desempleo', 'ipc', 'inversion_bruta'];
 const chartVariables: VariableName[] = ['desempleo', 'ipc', 'inversion_bruta']; // Pobreza excluida del gráfico
 
 
@@ -145,24 +144,21 @@ const calculatePartialCorrelationMatrix = (data: PideaDataPoint[]) => {
     const variables: VariableName[] = ['ipc', 'desempleo', 'inversion_bruta'];
     const matrix: { [key: string]: { [key: string]: number } } = {};
 
-    variables.forEach(var1 => {
-        matrix[var1] = {};
-        variables.forEach(var2 => {
-            if (var1 !== var2) {
-                const thirdVar = variables.find(v => v !== var1 && v !== var2)!;
-                // @ts-ignore
-                const values1 = data.map(d => d[var1]);
-                // @ts-ignore
-                const values2 = data.map(d => d[var2]);
-                // @ts-ignore
-                const values3 = data.map(d => d[thirdVar]);
-                
-                matrix[var1][var2] = calculatePartialCorrelation(values1, values2, values3);
-            } else {
-                matrix[var1][var2] = 1.0;
-            }
+        variables.forEach(var1 => {
+            matrix[var1] = {};
+            variables.forEach(var2 => {
+                if (var1 !== var2) {
+                    const thirdVar = variables.find(v => v !== var1 && v !== var2)!;
+                    const values1 = data.map(d => d[var1]);
+                    const values2 = data.map(d => d[var2]);
+                    const values3 = data.map(d => d[thirdVar]);
+                    
+                    matrix[var1][var2] = calculatePartialCorrelation(values1, values2, values3);
+                } else {
+                    matrix[var1][var2] = 1.0;
+                }
+            });
         });
-    });
 
     return matrix;
 };
@@ -327,7 +323,9 @@ const calculateVARModel = (data: PideaDataPoint[]) => {
 
 /**
  * Predice el siguiente valor de una variable usando el modelo VAR.
+ * @deprecated - No se usa actualmente, pero se mantiene para futuras implementaciones
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const predictWithVAR = (
     varModel: { [key: string]: { [key: string]: number } },
     currentValues: { ipc: number, desempleo: number, inversion_bruta: number },
@@ -337,7 +335,7 @@ const predictWithVAR = (
     const coefficients = varModel[targetVariable];
     
     let prediction = 0;
-    variables.forEach((varName, index) => {
+    variables.forEach((varName) => {
         const value = currentValues[varName as keyof typeof currentValues];
         prediction += coefficients[varName] * value;
     });
@@ -358,6 +356,7 @@ const normalizeValue = (value: number, name: VariableName, norm: TrainingMetrics
 };
 
 // Convierte un cambio porcentual a una escala cualitativa simple
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getQualitativeChange = (value: number) => {
     const absValue = Math.abs(value);
     const direction = value > 0 ? 'Aumento' : value < 0 ? 'Disminución' : 'Estable';
@@ -381,7 +380,6 @@ const getTrainingMetrics = (data: PideaDataPoint[]): TrainingMetrics => {
 
     // Calcular Normalización (Min/Max)
     variables.forEach(name => {
-        // @ts-ignore
         const values = data.map(d => d[name]);
         const min = Math.min(...values);
         const max = Math.max(...values);
@@ -455,13 +453,13 @@ const estimatePovertyForward = (ipcInput: number, desempleoInput: number, invers
     const zInversion = stdDevInversion === 0 ? 0 : (inversionInput - meanInversion) / stdDevInversion; 
     
     // Regresión Múltiple Simplificada (suma ponderada de impactos)
-    let estimatedZScore = 
+    const estimatedZScore = 
         (correlations.ipc * zIPC) + 
         (correlations.desempleo * zDesempleo) + 
         (correlations.inversion_bruta * zInversion); 
     
     // Desestandarizar
-    let finalEstimate = meanPoverty + (estimatedZScore * stdDevPoverty);
+    const finalEstimate = meanPoverty + (estimatedZScore * stdDevPoverty);
     
     if (isNaN(finalEstimate) || !isFinite(finalEstimate)) return NaN;
     
