@@ -288,6 +288,12 @@ const useLineChartData = (
   }, [data, normalization]);
 };
 
+const formatDateTime = (value: string) =>
+  new Date(value).toLocaleString('es-AR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+
 type CorrelationEntry = { variable: string; coefficient: number };
 
 const LaboratorioCompleto: React.FC<{ onNavigate?: (version: 'simple' | 'intermedio' | 'completo') => void }> = ({
@@ -333,6 +339,12 @@ const LaboratorioCompleto: React.FC<{ onNavigate?: (version: 'simple' | 'interme
   const correlationMatrix = useMemo(() => generateCorrelationMatrix(historicalData), [historicalData]);
   const normalization = useHistoricalNormalization(historicalData);
   const { history: chartHistory, lastYear } = useLineChartData(historicalData, normalization);
+  const dataUpdateLabel = useMemo(() => {
+    if (mortalidadStatus.updatedAt) {
+      return formatDateTime(mortalidadStatus.updatedAt);
+    }
+    return `Base histórica precargada (hasta ${lastYear})`;
+  }, [lastYear, mortalidadStatus.updatedAt]);
 
   const initialValues = useMemo(() => buildInitialState(historicalData), [historicalData]);
 
@@ -573,6 +585,10 @@ const LaboratorioCompleto: React.FC<{ onNavigate?: (version: 'simple' | 'interme
             Ajustá cualquier variable macroeconómica y aplicá el shock para ver cómo las demás se recalibran automáticamente
             según las correlaciones históricas del sistema.
           </p>
+          <div className="mt-4 inline-flex flex-col items-center gap-1 rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-2 text-xs text-indigo-800">
+            <span className="font-semibold">Última actualización de datos</span>
+            <span>{dataUpdateLabel}</span>
+          </div>
           {showMortalidadToast && (
             <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow">
               ✅ Datos actualizados
