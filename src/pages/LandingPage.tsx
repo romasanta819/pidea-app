@@ -156,6 +156,7 @@ const LandingPage: React.FC = () => {
           </div>
           <nav className="hidden md:flex gap-6">
             <a href="#concepto" className="text-slate-700 hover:text-blue-600 transition">Concepto</a>
+            <a href="#como-funciona" className="text-slate-700 hover:text-blue-600 transition">Cómo funciona</a>
             <a href="#app" className="text-slate-700 hover:text-blue-600 transition">Laboratorio</a>
             <a href="#propuesta" className="text-slate-700 hover:text-blue-600 transition">Propuesta</a>
             <a href="#plataforma" className="text-slate-700 hover:text-blue-600 transition">Plataforma</a>
@@ -177,6 +178,9 @@ const LandingPage: React.FC = () => {
             Un espacio político donde cada propuesta se evalúa con metodología científica antes de aplicarse.
             Herramientas abiertas de simulación económica y social, basadas en datos oficiales.
           </p>
+          <p className="text-lg text-slate-500 mb-10 max-w-3xl mx-auto">
+            Menos relato, más evidencia. Menos opacidad, más participación ciudadana.
+          </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => {
@@ -193,6 +197,48 @@ const LandingPage: React.FC = () => {
             >
               Conocer la propuesta
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Cómo Funciona */}
+      <section id="como-funciona" className="bg-slate-50 py-20">
+        <div className="max-w-7xl mx-auto px-4">
+          <h3 className="text-4xl font-bold text-center text-slate-900 mb-4">
+            ¿Cómo funciona Polia?
+          </h3>
+          <p className="text-center text-slate-600 text-lg max-w-3xl mx-auto mb-12">
+            Convertimos propuestas en escenarios comparables para debatir con evidencia y decidir mejor.
+          </p>
+          <div className="grid md:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <p className="text-sm font-semibold text-blue-600 mb-2">Paso 1</p>
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">Propuesta</h4>
+              <p className="text-slate-600">
+                Definís una medida concreta (por ejemplo, cambiar inversión, impuestos o prioridades de gasto).
+              </p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <p className="text-sm font-semibold text-blue-600 mb-2">Paso 2</p>
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">Simulación</h4>
+              <p className="text-slate-600">
+                El laboratorio estima efectos probables usando series históricas y reglas de coherencia económica.
+              </p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <p className="text-sm font-semibold text-blue-600 mb-2">Paso 3</p>
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">Debate</h4>
+              <p className="text-slate-600">
+                Contrastás argumentos a favor y en contra, con supuestos claros y fuentes trazables.
+              </p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <p className="text-sm font-semibold text-blue-600 mb-2">Paso 4</p>
+              <h4 className="text-lg font-semibold text-slate-900 mb-2">Participación</h4>
+              <p className="text-slate-600">
+                La ciudadanía puede priorizar opciones con información visible y decisiones más transparentes.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -670,6 +716,12 @@ const LandingPage: React.FC = () => {
               className="bg-blue-700 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-blue-800 transition border-2 border-blue-500"
             >
               Contactarnos
+            </a>
+            <a
+              href="mailto:contacto@partidocientifico.ar?subject=Quiero%20sumarme%20a%20Polia&body=Hola%2C%20quiero%20colaborar%20con%20Polia."
+              className="bg-transparent text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-blue-500/30 transition border-2 border-blue-300"
+            >
+              Quiero sumarme
             </a>
           </div>
         </div>
