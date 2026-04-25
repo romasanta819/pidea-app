@@ -1,40 +1,155 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Partido Científico - Laboratorio de Simulación Económica
 
-## Getting Started
+**Política basada en evidencia científica. Transparencia total. Democracia directa.**
 
-First, run the development server:
+## 🎯 Visión
+
+El Partido Científico propone un nuevo modelo de política donde cada decisión se evalúa científicamente antes de ejecutarse. Utilizamos datos oficiales y herramientas de simulación para predecir las consecuencias reales de las medidas políticas.
+
+## 🚀 Características Principales
+
+### Laboratorio de Simulación Económica
+- **14 variables económicas** ajustables con propagación en cascada
+- **Cálculo automático** basado en correlaciones históricas reales
+- **Validación de coherencia** automática de resultados
+- **Generación de informes** escritos automáticos
+- **Visualizaciones** históricas y proyecciones
+
+### Concepto del Partido Científico
+
+- **📊 Decisión Basada en Datos**: Cada propuesta se evalúa mediante simulaciones antes de implementarse
+- **🔬 Metodología Científica**: Utilizamos datos oficiales del INDEC, BCRA y otras fuentes gubernamentales
+- **🌐 Acceso Libre**: Todas nuestras herramientas son de acceso público y código abierto
+- **🗳️ Democracia Directa**: Sistema de participación ciudadana aprovechando la alta conectividad
+- **🏗️ Obras Públicas en Vivo**: Transmisión en tiempo real de todas las obras públicas
+- **⚖️ Modernización de la Justicia**: Sistemas digitales transparentes que eliminan discrecionalidad
+- **📈 Estado Online**: Acceso en tiempo real a todos los indicadores e información administrativa
+
+## 🛠️ Tecnologías
+
+- **React 18** con TypeScript
+- **Vite** para desarrollo y build
+- **Tailwind CSS** para estilos
+- **Recharts** para gráficos
+- **jsPDF** para exportación de informes
+
+## 📦 Instalación
+
+```bash
+npm install
+```
+
+## 🏃 Desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La aplicación se abrirá automáticamente en [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## 🏗️ Build para Producción
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+```bash
+npm run build
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+Los archivos se generarán en la carpeta `dist/` listos para desplegar.
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📊 Variables Económicas del Laboratorio
 
-## Learn More
+El laboratorio completo incluye las siguientes variables:
 
-To learn more about Next.js, take a look at the following resources:
+- Inflación (IPC %)
+- Tasa de Desempleo (%)
+- Inversión Bruta (% PIB)
+- Consumo Energético (kWh per cápita)
+- Índice MERVAL
+- Exportaciones (% PIB)
+- Riesgo País (puntos básicos)
+- Consumo de Carne (kg/año per cápita)
+- Automóviles Vendidos (miles)
+- Deuda Pública (% del PIB)
+- Pobreza (%) - calculada automáticamente
+- PIB (millones USD)
+- Salarios Reales (índice base 100)
+- Inflación Futura (%)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+## 🧮 Cómo Funciona el Laboratorio
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Modifica variables**: Usa los sliders para ajustar cualquier variable económica
+2. **Aplica propagación**: Haz clic en "Aplicar propagación" para ver cómo se propagan los efectos
+3. **Observa resultados**: El sistema calcula automáticamente cómo cambian otras variables basándose en correlaciones históricas
+4. **Revisa validación**: El sistema valida automáticamente la coherencia de los resultados
+5. **Lee el informe**: Se genera automáticamente un informe escrito detallado de los cambios
 
-## Deploy on Vercel
+## 📈 Datos Históricos
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Los datos históricos están basados en información real de:
+- INDEC (Instituto Nacional de Estadística y Censos)
+- BCRA (Banco Central de la República Argentina)
+- Otras fuentes oficiales
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+Cubre el período 1994-2025 con datos semestrales.
+
+## 🔄 Carga Automática de Riesgo País
+
+El sistema incluye carga automática de datos de riesgo país desde fuentes oficiales:
+
+- **FRED API**: Federal Reserve Economic Data (API gratuita)
+- **BCRA**: Banco Central (implementación en progreso)
+- **Datos locales**: Fallback con datos históricos hardcodeados
+
+### Configuración Rápida
+
+1. Obtén tu API key gratuita de FRED: https://fred.stlouisfed.org/docs/api/api_key.html
+2. Crea un archivo `.env` en la raíz del proyecto:
+   ```env
+   VITE_FRED_API_KEY=tu_api_key_aqui
+   ```
+3. El sistema cargará automáticamente los datos más recientes
+
+## 📁 Estructura del Proyecto
+
+```
+src/
+├── pages/
+│   └── LandingPage.tsx          # Página principal pública
+├── components/
+│   ├── LaboratorioSimple.tsx     # Versión simple
+│   ├── LaboratorioIntermedio.tsx # Versión intermedia
+│   └── LaboratorioCompleto.tsx  # Versión completa
+├── data/
+│   └── historicalData.ts        # Datos históricos (1994-2025)
+├── utils/
+│   ├── correlationCalculator.ts  # Cálculo de correlaciones
+│   ├── reportGenerator.ts        # Generación de informes
+│   └── coherenceValidator.ts     # Validación de coherencia
+├── App.tsx                       # Componente raíz
+└── main.tsx                      # Punto de entrada
+```
+
+## 🌐 Despliegue
+
+El proyecto está listo para desplegarse en cualquier plataforma de hosting estático:
+
+- **Vercel**: `vercel --prod`
+- **Netlify**: Conecta tu repositorio Git
+- **GitHub Pages**: Usa `npm run build` y despliega la carpeta `dist/`
+
+## 📝 Licencia
+
+MIT - Código abierto para transparencia total
+
+## 🤝 Contribuciones
+
+Este es un proyecto abierto. Todas las contribuciones son bienvenidas. El objetivo es crear herramientas de acceso libre para que cualquier ciudadano pueda evaluar propuestas políticas basadas en evidencia científica.
+
+## 📧 Contacto
+
+Para más información sobre el Partido Científico:
+- Email: contacto@partidocientifico.ar
+- Todas las herramientas son de código abierto y acceso libre
+
+---
+
+**"La política basada en evidencia científica es el futuro. Sé parte del cambio."**

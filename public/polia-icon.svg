@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="POLIA icon">
+  <circle cx="80" cy="80" r="56" fill="#F97316"/>
+  <circle cx="34" cy="34" r="10" fill="#F97316"/>
+  <circle cx="34" cy="126" r="10" fill="#F97316"/>
+  <line x1="46" y1="46" x2="60" y2="60" stroke="#F97316" stroke-width="6" stroke-linecap="round"/>
+  <line x1="46" y1="114" x2="60" y2="100" stroke="#F97316" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="80" cy="80" r="22" fill="white"/>
+</svg>
