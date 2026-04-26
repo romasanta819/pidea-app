@@ -7,6 +7,15 @@ import ReactMarkdown from 'react-markdown';
 
 type CitizenVote = 'a_favor' | 'en_contra';
 type RepresentativeVote = 'alineado' | 'objecion';
+type DecisionHistoryEntry = {
+  id: string;
+  timestamp: string;
+  topicTitle: string;
+  citizenVote: CitizenVote;
+  representativeVote: RepresentativeVote;
+  objectionReason: string | null;
+  handicapAfter: number;
+};
 
 const DOCUMENTS = [
   {
@@ -68,6 +77,10 @@ const DAILY_TOPICS = [
   },
 ] as const;
 
+const HANDICAP_STORAGE_KEY = 'polia.handicap.v1';
+const DECISION_HISTORY_STORAGE_KEY = 'polia.decisionHistory.v1';
+const INITIAL_HANDICAP = 50;
+
 const markdownComponents = {
   h1: ({ children }: React.HTMLAttributes<HTMLHeadingElement>) => (
     <h1 className="text-3xl font-bold text-slate-900 mt-6 mb-4">{children}</h1>
@@ -119,6 +132,8 @@ const LandingPage: React.FC = () => {
   const [representativeVote, setRepresentativeVote] = useState<RepresentativeVote | null>(null);
   const [objectionReason, setObjectionReason] = useState('');
   const [flowStep, setFlowStep] = useState<1 | 2 | 3 | 4>(1);
+  const [handicap, setHandicap] = useState<number>(INITIAL_HANDICAP);
+  const [decisionHistory, setDecisionHistory] = useState<DecisionHistoryEntry[]>([]);
   const docCache = useRef<Record<string, string>>({});
   const activeDoc = DOCUMENTS.find((doc) => doc.id === activeDocId) ?? null;
   const selectedTopic = DAILY_TOPICS.find((topic) => topic.id === selectedTopicId) ?? DAILY_TOPICS[0];
@@ -169,6 +184,72 @@ const LandingPage: React.FC = () => {
       isMounted = false;
     };
   }, [activeDoc]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storedHandicap = window.localStorage.getItem(HANDICAP_STORAGE_KEY);
+    const storedHistory = window.localStorage.getItem(DECISION_HISTORY_STORAGE_KEY);
+
+    if (storedHandicap) {
+      const parsed = Number(storedHandicap);
+      if (Number.isFinite(parsed)) {
+        setHandicap(parsed);
+      }
+    }
+
+    if (storedHistory) {
+      try {
+        const parsedHistory = JSON.parse(storedHistory) as DecisionHistoryEntry[];
+        if (Array.isArray(parsedHistory)) {
+          setDecisionHistory(parsedHistory);
+        }
+      } catch {
+        // Ignore malformed local storage data.
+      }
+    }
+  }, []);
+
+  const persistCivicProgress = (nextHandicap: number, nextHistory: DecisionHistoryEntry[]) => {
+    setHandicap(nextHandicap);
+    setDecisionHistory(nextHistory);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(HANDICAP_STORAGE_KEY, String(nextHandicap));
+      window.localStorage.setItem(DECISION_HISTORY_STORAGE_KEY, JSON.stringify(nextHistory));
+    }
+  };
+
+  const handleFinalizeVote = () => {
+    if (!citizenVote || !representativeVote) return;
+    if (representativeVote === 'objecion' && objectionReason.trim().length < 20) return;
+
+    let delta = 0;
+    if (representativeVote === 'alineado') {
+      delta = 2;
+    } else if (objectionReason.trim().length >= 80) {
+      delta = 1;
+    } else {
+      delta = -2;
+    }
+
+    const nextHandicap = Math.max(0, Math.min(100, handicap + delta));
+    const newEntry: DecisionHistoryEntry = {
+      id: `${Date.now()}-${selectedTopic.id}`,
+      timestamp: new Date().toISOString(),
+      topicTitle: selectedTopic.title,
+      citizenVote,
+      representativeVote,
+      objectionReason: representativeVote === 'objecion' ? objectionReason.trim() : null,
+      handicapAfter: nextHandicap,
+    };
+
+    const nextHistory = [newEntry, ...decisionHistory].slice(0, 10);
+    persistCivicProgress(nextHandicap, nextHistory);
+
+    setFlowStep(1);
+    setCitizenVote(null);
+    setRepresentativeVote(null);
+    setObjectionReason('');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -647,6 +728,9 @@ const LandingPage: React.FC = () => {
               Flujo narrativo de participación: analizás la problemática, revisás la evidencia probabilística y cerrás en
               voto ciudadano.
             </p>
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-800">
+              Handicap cívico: {handicap}/100
+            </div>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
@@ -811,6 +895,57 @@ const LandingPage: React.FC = () => {
                       : 'Sin emitir'}
                   </p>
                 </div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    onClick={handleFinalizeVote}
+                    disabled={
+                      !citizenVote ||
+                      !representativeVote ||
+                      (representativeVote === 'objecion' && objectionReason.trim().length < 20)
+                    }
+                    className={`rounded-full px-5 py-2 font-semibold transition ${
+                      !citizenVote ||
+                      !representativeVote ||
+                      (representativeVote === 'objecion' && objectionReason.trim().length < 20)
+                        ? 'bg-slate-300 text-slate-500'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    }`}
+                  >
+                    Emitir voto final
+                  </button>
+                  {representativeVote === 'objecion' && objectionReason.trim().length < 20 && (
+                    <span className="text-xs text-amber-700 self-center">
+                      La objeción requiere al menos 20 caracteres para quedar registrada.
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h4 className="text-lg font-semibold text-slate-900 mb-3">Historial reciente de decisiones</h4>
+            {decisionHistory.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                Todavía no hay decisiones registradas. Completá el flujo y emití el voto final para generar historial.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {decisionHistory.map((entry) => (
+                  <div key={entry.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-900">{entry.topicTitle}</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {new Date(entry.timestamp).toLocaleString('es-AR')}
+                    </p>
+                    <p className="text-sm text-slate-700 mt-2">
+                      Ciudadanía: {entry.citizenVote === 'a_favor' ? 'A favor' : 'En contra'} · Representante:{' '}
+                      {entry.representativeVote === 'alineado' ? 'Alineado' : 'Objeción fundada'}
+                    </p>
+                    <p className="text-sm text-slate-700">
+                      Handicap tras decisión: <span className="font-semibold">{entry.handicapAfter}/100</span>
+                    </p>
+                  </div>
+                ))}
               </div>
             )}
           </div>
