@@ -19,6 +19,15 @@ type DecisionHistoryEntry = {
   resolutionTimestamp: string | null;
 };
 type NarrativeView = 'flujo' | 'resultados';
+type ImpactWindow = {
+  label: '3 meses' | '12 meses' | '24 meses';
+  probability: number;
+  expectedEffect: 'positivo' | 'neutral' | 'negativo';
+};
+
+type TopicWithImpact = (typeof DAILY_TOPICS)[number] & {
+  impactWindows: ImpactWindow[];
+};
 
 const DOCUMENTS = [
   {
@@ -59,6 +68,11 @@ const DAILY_TOPICS = [
       'Se evalúa redirigir inversión pública para reducir cortes y mejorar eficiencia energética en zonas urbanas y productivas.',
     scientificAnalysis:
       'Probabilidad estimada de mejora neta en productividad y calidad de servicio: 0.72 (72%). Riesgo principal: sobrecosto inicial de implementación.',
+    impactWindows: [
+      { label: '3 meses', probability: 0.55, expectedEffect: 'neutral' },
+      { label: '12 meses', probability: 0.72, expectedEffect: 'positivo' },
+      { label: '24 meses', probability: 0.76, expectedEffect: 'positivo' },
+    ],
   },
   {
     id: 'empleo',
@@ -68,6 +82,11 @@ const DAILY_TOPICS = [
       'Se propone capacitar trabajadores desplazados por automatización para sectores de alto valor agregado.',
     scientificAnalysis:
       'Probabilidad estimada de reducción del desempleo estructural a 24 meses: 0.64 (64%). Riesgo principal: baja adherencia si no hay incentivos.',
+    impactWindows: [
+      { label: '3 meses', probability: 0.45, expectedEffect: 'neutral' },
+      { label: '12 meses', probability: 0.58, expectedEffect: 'positivo' },
+      { label: '24 meses', probability: 0.64, expectedEffect: 'positivo' },
+    ],
   },
   {
     id: 'obra-publica',
@@ -77,6 +96,11 @@ const DAILY_TOPICS = [
       'Licitaciones y avances de obra visibles en tiempo real con auditoría ciudadana y alertas de desvíos.',
     scientificAnalysis:
       'Probabilidad estimada de reducción de irregularidades detectables: 0.79 (79%). Riesgo principal: resistencia institucional en etapas tempranas.',
+    impactWindows: [
+      { label: '3 meses', probability: 0.6, expectedEffect: 'positivo' },
+      { label: '12 meses', probability: 0.74, expectedEffect: 'positivo' },
+      { label: '24 meses', probability: 0.79, expectedEffect: 'positivo' },
+    ],
   },
 ] as const;
 
@@ -140,7 +164,7 @@ const LandingPage: React.FC = () => {
   const [decisionHistory, setDecisionHistory] = useState<DecisionHistoryEntry[]>([]);
   const docCache = useRef<Record<string, string>>({});
   const activeDoc = DOCUMENTS.find((doc) => doc.id === activeDocId) ?? null;
-  const selectedTopic = DAILY_TOPICS.find((topic) => topic.id === selectedTopicId) ?? DAILY_TOPICS[0];
+  const selectedTopic = (DAILY_TOPICS.find((topic) => topic.id === selectedTopicId) ?? DAILY_TOPICS[0]) as TopicWithImpact;
 
   useEffect(() => {
     if (!activeDoc) {
@@ -990,6 +1014,33 @@ const LandingPage: React.FC = () => {
                       : representativeVote === 'objecion'
                       ? 'Objeción fundada'
                       : 'Sin emitir'}
+                  </p>
+                </div>
+                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-sm font-semibold text-slate-800 mb-2">
+                    Simulador de impacto temporal (probabilidad)
+                  </p>
+                  <div className="grid md:grid-cols-3 gap-3">
+                    {selectedTopic.impactWindows.map((window) => (
+                      <div key={window.label} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-xs font-semibold text-slate-500">{window.label}</p>
+                        <p className="text-xl font-bold text-slate-900">{Math.round(window.probability * 100)}%</p>
+                        <p
+                          className={`text-xs font-semibold ${
+                            window.expectedEffect === 'positivo'
+                              ? 'text-emerald-700'
+                              : window.expectedEffect === 'neutral'
+                              ? 'text-amber-700'
+                              : 'text-rose-700'
+                          }`}
+                        >
+                          Efecto esperado: {window.expectedEffect}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">
+                    Siempre se interpreta como probabilidad estimada, no como certeza.
                   </p>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-3">
