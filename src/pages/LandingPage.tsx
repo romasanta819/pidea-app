@@ -16,6 +16,7 @@ type DecisionHistoryEntry = {
   objectionReason: string | null;
   handicapAfter: number;
 };
+type NarrativeView = 'flujo' | 'resultados';
 
 const DOCUMENTS = [
   {
@@ -132,6 +133,7 @@ const LandingPage: React.FC = () => {
   const [representativeVote, setRepresentativeVote] = useState<RepresentativeVote | null>(null);
   const [objectionReason, setObjectionReason] = useState('');
   const [flowStep, setFlowStep] = useState<1 | 2 | 3 | 4>(1);
+  const [narrativeView, setNarrativeView] = useState<NarrativeView>('flujo');
   const [handicap, setHandicap] = useState<number>(INITIAL_HANDICAP);
   const [decisionHistory, setDecisionHistory] = useState<DecisionHistoryEntry[]>([]);
   const docCache = useRef<Record<string, string>>({});
@@ -250,6 +252,35 @@ const LandingPage: React.FC = () => {
     setRepresentativeVote(null);
     setObjectionReason('');
   };
+
+  const resultsSummary = React.useMemo(() => {
+    const total = decisionHistory.length;
+    const aligned = decisionHistory.filter((entry) => entry.representativeVote === 'alineado').length;
+    const objections = total - aligned;
+    const avgHandicap =
+      total === 0
+        ? handicap
+        : Math.round(
+            decisionHistory.reduce((sum, entry) => sum + entry.handicapAfter, 0) / total,
+          );
+    const topTopics = Object.entries(
+      decisionHistory.reduce<Record<string, number>>((acc, entry) => {
+        acc[entry.topicTitle] = (acc[entry.topicTitle] ?? 0) + 1;
+        return acc;
+      }, {}),
+    )
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+
+    return {
+      total,
+      aligned,
+      objections,
+      alignmentRate: total > 0 ? Math.round((aligned / total) * 100) : 0,
+      avgHandicap,
+      topTopics,
+    };
+  }, [decisionHistory, handicap]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -734,6 +765,31 @@ const LandingPage: React.FC = () => {
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+            <div className="mb-5 flex flex-wrap gap-2">
+              <button
+                onClick={() => setNarrativeView('flujo')}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  narrativeView === 'flujo'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                Flujo narrativo
+              </button>
+              <button
+                onClick={() => setNarrativeView('resultados')}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  narrativeView === 'resultados'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                Resultados acumulados
+              </button>
+            </div>
+
+            {narrativeView === 'flujo' && (
+              <>
             <div className="flex flex-wrap gap-2 mb-6">
               {[1, 2, 3, 4].map((step) => (
                 <button
@@ -917,6 +973,65 @@ const LandingPage: React.FC = () => {
                     <span className="text-xs text-amber-700 self-center">
                       La objeción requiere al menos 20 caracteres para quedar registrada.
                     </span>
+                  )}
+                </div>
+              </div>
+            )}
+              </>
+            )}
+
+            {narrativeView === 'resultados' && (
+              <div>
+                <h4 className="text-xl font-semibold text-slate-900 mb-4">Panel de resultados acumulados</h4>
+                <div className="grid md:grid-cols-4 gap-4 mb-6">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs text-slate-500">Decisiones registradas</p>
+                    <p className="text-2xl font-bold text-slate-900">{resultsSummary.total}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs text-slate-500">Alineación con ciudadanía</p>
+                    <p className="text-2xl font-bold text-emerald-700">{resultsSummary.alignmentRate}%</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs text-slate-500">Objeciones fundadas</p>
+                    <p className="text-2xl font-bold text-amber-700">{resultsSummary.objections}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs text-slate-500">Handicap promedio</p>
+                    <p className="text-2xl font-bold text-indigo-700">{resultsSummary.avgHandicap}/100</p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-white p-4 mb-6">
+                  <p className="text-sm font-semibold text-slate-800 mb-2">Temas con más decisiones</p>
+                  {resultsSummary.topTopics.length === 0 ? (
+                    <p className="text-sm text-slate-500">Todavía no hay historial suficiente.</p>
+                  ) : (
+                    <ul className="space-y-2 text-sm text-slate-700">
+                      {resultsSummary.topTopics.map(([topic, count]) => (
+                        <li key={topic} className="flex justify-between">
+                          <span>{topic}</span>
+                          <span className="font-semibold">{count}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-sm font-semibold text-slate-800 mb-2">Evolución reciente del handicap</p>
+                  {decisionHistory.length === 0 ? (
+                    <p className="text-sm text-slate-500">Emití votos finales para visualizar tendencia.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {decisionHistory.slice(0, 6).map((entry) => (
+                        <div key={entry.id} className="flex items-center justify-between text-sm text-slate-700">
+                          <span>{new Date(entry.timestamp).toLocaleDateString('es-AR')}</span>
+                          <span>{entry.topicTitle}</span>
+                          <span className="font-semibold">{entry.handicapAfter}/100</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
