@@ -5,6 +5,9 @@ import LaboratorioCompleto from '../components/LaboratorioCompleto';
 import ErrorBoundary from '../components/ErrorBoundary';
 import ReactMarkdown from 'react-markdown';
 
+type CitizenVote = 'a_favor' | 'en_contra';
+type RepresentativeVote = 'alineado' | 'objecion';
+
 const DOCUMENTS = [
   {
     id: 'principios',
@@ -32,6 +35,36 @@ const DOCUMENTS = [
     icon: '⚖️',
     primaryGradient: 'from-green-500 to-emerald-500',
     secondaryGradient: 'from-green-600 to-emerald-600',
+  },
+] as const;
+
+const DAILY_TOPICS = [
+  {
+    id: 'energia',
+    title: 'Plan de estabilización energética',
+    urgency: 'Alta',
+    context:
+      'Se evalúa redirigir inversión pública para reducir cortes y mejorar eficiencia energética en zonas urbanas y productivas.',
+    scientificAnalysis:
+      'Probabilidad estimada de mejora neta en productividad y calidad de servicio: 0.72 (72%). Riesgo principal: sobrecosto inicial de implementación.',
+  },
+  {
+    id: 'empleo',
+    title: 'Programa de reconversión laboral',
+    urgency: 'Media',
+    context:
+      'Se propone capacitar trabajadores desplazados por automatización para sectores de alto valor agregado.',
+    scientificAnalysis:
+      'Probabilidad estimada de reducción del desempleo estructural a 24 meses: 0.64 (64%). Riesgo principal: baja adherencia si no hay incentivos.',
+  },
+  {
+    id: 'obra-publica',
+    title: 'Transparencia total en obra pública',
+    urgency: 'Alta',
+    context:
+      'Licitaciones y avances de obra visibles en tiempo real con auditoría ciudadana y alertas de desvíos.',
+    scientificAnalysis:
+      'Probabilidad estimada de reducción de irregularidades detectables: 0.79 (79%). Riesgo principal: resistencia institucional en etapas tempranas.',
   },
 ] as const;
 
@@ -81,8 +114,14 @@ const LandingPage: React.FC = () => {
   const [docContent, setDocContent] = useState('');
   const [docError, setDocError] = useState<string | null>(null);
   const [isLoadingDoc, setIsLoadingDoc] = useState(false);
+  const [selectedTopicId, setSelectedTopicId] = useState<string>(DAILY_TOPICS[0].id);
+  const [citizenVote, setCitizenVote] = useState<CitizenVote | null>(null);
+  const [representativeVote, setRepresentativeVote] = useState<RepresentativeVote | null>(null);
+  const [objectionReason, setObjectionReason] = useState('');
+  const [flowStep, setFlowStep] = useState<1 | 2 | 3 | 4>(1);
   const docCache = useRef<Record<string, string>>({});
   const activeDoc = DOCUMENTS.find((doc) => doc.id === activeDocId) ?? null;
+  const selectedTopic = DAILY_TOPICS.find((topic) => topic.id === selectedTopicId) ?? DAILY_TOPICS[0];
 
   useEffect(() => {
     if (!activeDoc) {
@@ -596,6 +635,185 @@ const LandingPage: React.FC = () => {
               </button>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Orden del Día - Flujo Narrativo */}
+      <section id="orden-del-dia" className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-10">
+            <h3 className="text-4xl font-bold text-slate-900 mb-4">Orden del Día</h3>
+            <p className="text-lg text-slate-600 max-w-3xl mx-auto">
+              Flujo narrativo de participación: analizás la problemática, revisás la evidencia probabilística y cerrás en
+              voto ciudadano.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+            <div className="flex flex-wrap gap-2 mb-6">
+              {[1, 2, 3, 4].map((step) => (
+                <button
+                  key={step}
+                  onClick={() => setFlowStep(step as 1 | 2 | 3 | 4)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    flowStep === step
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  Paso {step}
+                </button>
+              ))}
+            </div>
+
+            {flowStep === 1 && (
+              <div>
+                <h4 className="text-xl font-semibold text-slate-900 mb-3">1. Seleccioná un tema prioritario</h4>
+                <p className="text-slate-600 mb-5">
+                  Elegí el tema del día que se elevará a votación de representantes.
+                </p>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {DAILY_TOPICS.map((topic) => (
+                    <button
+                      key={topic.id}
+                      onClick={() => setSelectedTopicId(topic.id)}
+                      className={`rounded-xl border p-4 text-left transition ${
+                        selectedTopicId === topic.id
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      <p className="text-xs font-semibold text-slate-500 mb-2">Urgencia: {topic.urgency}</p>
+                      <p className="font-semibold text-slate-900">{topic.title}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {flowStep === 2 && (
+              <div>
+                <h4 className="text-xl font-semibold text-slate-900 mb-3">2. Contexto y análisis científico</h4>
+                <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-500">Tema activo</p>
+                    <p className="text-lg font-semibold text-slate-900">{selectedTopic.title}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-500">Problemática</p>
+                    <p className="text-slate-700">{selectedTopic.context}</p>
+                  </div>
+                  <div className="rounded-lg bg-indigo-50 border border-indigo-100 p-4">
+                    <p className="text-sm font-semibold text-indigo-700 mb-1">Evaluación probabilística</p>
+                    <p className="text-indigo-900">{selectedTopic.scientificAnalysis}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {flowStep === 3 && (
+              <div>
+                <h4 className="text-xl font-semibold text-slate-900 mb-3">3. Votación ciudadana de referencia</h4>
+                <p className="text-slate-600 mb-4">
+                  Definí la voluntad popular para orientar el voto del representante.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setCitizenVote('a_favor')}
+                    className={`rounded-full px-5 py-2 font-semibold transition ${
+                      citizenVote === 'a_favor'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    Voto ciudadano: A favor
+                  </button>
+                  <button
+                    onClick={() => setCitizenVote('en_contra')}
+                    className={`rounded-full px-5 py-2 font-semibold transition ${
+                      citizenVote === 'en_contra'
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    Voto ciudadano: En contra
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {flowStep === 4 && (
+              <div>
+                <h4 className="text-xl font-semibold text-slate-900 mb-3">4. Voto final del representante</h4>
+                <p className="text-slate-600 mb-4">
+                  El representante puede alinearse con la voluntad popular o presentar objeción fundada.
+                </p>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  <button
+                    onClick={() => {
+                      setRepresentativeVote('alineado');
+                      setObjectionReason('');
+                    }}
+                    className={`rounded-full px-5 py-2 font-semibold transition ${
+                      representativeVote === 'alineado'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    Alinear voto con ciudadanía
+                  </button>
+                  <button
+                    onClick={() => setRepresentativeVote('objecion')}
+                    className={`rounded-full px-5 py-2 font-semibold transition ${
+                      representativeVote === 'objecion'
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-white text-slate-700 border border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    Objetar con descarga
+                  </button>
+                </div>
+
+                {representativeVote === 'objecion' && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Motivo de objeción (queda en historial)
+                    </label>
+                    <textarea
+                      value={objectionReason}
+                      onChange={(e) => setObjectionReason(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 p-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                      rows={4}
+                      placeholder="Explicá por qué votás distinto del mandato ciudadano..."
+                    />
+                  </div>
+                )}
+
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-sm text-slate-600 mb-2">Resumen de la decisión</p>
+                  <p className="text-slate-900">
+                    <span className="font-semibold">Tema:</span> {selectedTopic.title}
+                  </p>
+                  <p className="text-slate-900">
+                    <span className="font-semibold">Mandato ciudadano:</span>{' '}
+                    {citizenVote === 'a_favor'
+                      ? 'A favor'
+                      : citizenVote === 'en_contra'
+                      ? 'En contra'
+                      : 'Sin definir'}
+                  </p>
+                  <p className="text-slate-900">
+                    <span className="font-semibold">Voto representante:</span>{' '}
+                    {representativeVote === 'alineado'
+                      ? 'Alineado'
+                      : representativeVote === 'objecion'
+                      ? 'Objeción fundada'
+                      : 'Sin emitir'}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
