@@ -15,6 +15,8 @@ type DecisionHistoryEntry = {
   representativeVote: RepresentativeVote;
   objectionReason: string | null;
   handicapAfter: number;
+  resolution: 'pendiente' | 'acierto' | 'error';
+  resolutionTimestamp: string | null;
 };
 type NarrativeView = 'flujo' | 'resultados';
 
@@ -201,9 +203,22 @@ const LandingPage: React.FC = () => {
 
     if (storedHistory) {
       try {
-        const parsedHistory = JSON.parse(storedHistory) as DecisionHistoryEntry[];
+        const parsedHistory = JSON.parse(storedHistory) as Partial<DecisionHistoryEntry>[];
         if (Array.isArray(parsedHistory)) {
-          setDecisionHistory(parsedHistory);
+          setDecisionHistory(
+            parsedHistory.map((entry) => ({
+              id: entry.id ?? `${Date.now()}-${Math.random()}`,
+              timestamp: entry.timestamp ?? new Date().toISOString(),
+              topicTitle: entry.topicTitle ?? 'Tema sin título',
+              citizenVote: (entry.citizenVote as CitizenVote) ?? 'a_favor',
+              representativeVote: (entry.representativeVote as RepresentativeVote) ?? 'alineado',
+              objectionReason: entry.objectionReason ?? null,
+              handicapAfter: Number.isFinite(entry.handicapAfter) ? Number(entry.handicapAfter) : INITIAL_HANDICAP,
+              resolution:
+                entry.resolution === 'acierto' || entry.resolution === 'error' ? entry.resolution : 'pendiente',
+              resolutionTimestamp: entry.resolutionTimestamp ?? null,
+            })),
+          );
         }
       } catch {
         // Ignore malformed local storage data.
@@ -242,6 +257,8 @@ const LandingPage: React.FC = () => {
       representativeVote,
       objectionReason: representativeVote === 'objecion' ? objectionReason.trim() : null,
       handicapAfter: nextHandicap,
+      resolution: 'pendiente',
+      resolutionTimestamp: null,
     };
 
     const nextHistory = [newEntry, ...decisionHistory].slice(0, 10);
@@ -253,10 +270,32 @@ const LandingPage: React.FC = () => {
     setObjectionReason('');
   };
 
+  const handleResolveDecision = (entryId: string, resolution: 'acierto' | 'error') => {
+    const target = decisionHistory.find((entry) => entry.id === entryId);
+    if (!target || target.resolution !== 'pendiente') return;
+
+    const delta = resolution === 'acierto' ? 3 : -3;
+    const nextHandicap = Math.max(0, Math.min(100, handicap + delta));
+
+    const nextHistory = decisionHistory.map((entry) =>
+      entry.id === entryId
+        ? {
+            ...entry,
+            resolution,
+            resolutionTimestamp: new Date().toISOString(),
+          }
+        : entry,
+    );
+
+    persistCivicProgress(nextHandicap, nextHistory);
+  };
+
   const resultsSummary = React.useMemo(() => {
     const total = decisionHistory.length;
     const aligned = decisionHistory.filter((entry) => entry.representativeVote === 'alineado').length;
     const objections = total - aligned;
+    const resolvedAciertos = decisionHistory.filter((entry) => entry.resolution === 'acierto').length;
+    const resolvedErrores = decisionHistory.filter((entry) => entry.resolution === 'error').length;
     const avgHandicap =
       total === 0
         ? handicap
@@ -278,6 +317,8 @@ const LandingPage: React.FC = () => {
       objections,
       alignmentRate: total > 0 ? Math.round((aligned / total) * 100) : 0,
       avgHandicap,
+      resolvedAciertos,
+      resolvedErrores,
       topTopics,
     };
   }, [decisionHistory, handicap]);
@@ -1001,6 +1042,16 @@ const LandingPage: React.FC = () => {
                     <p className="text-2xl font-bold text-indigo-700">{resultsSummary.avgHandicap}/100</p>
                   </div>
                 </div>
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                    <p className="text-xs text-emerald-700">Resoluciones correctas (aciertos)</p>
+                    <p className="text-2xl font-bold text-emerald-700">{resultsSummary.resolvedAciertos}</p>
+                  </div>
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+                    <p className="text-xs text-rose-700">Resoluciones incorrectas (errores)</p>
+                    <p className="text-2xl font-bold text-rose-700">{resultsSummary.resolvedErrores}</p>
+                  </div>
+                </div>
 
                 <div className="rounded-xl border border-slate-200 bg-white p-4 mb-6">
                   <p className="text-sm font-semibold text-slate-800 mb-2">Temas con más decisiones</p>
@@ -1025,10 +1076,41 @@ const LandingPage: React.FC = () => {
                   ) : (
                     <div className="space-y-2">
                       {decisionHistory.slice(0, 6).map((entry) => (
-                        <div key={entry.id} className="flex items-center justify-between text-sm text-slate-700">
-                          <span>{new Date(entry.timestamp).toLocaleDateString('es-AR')}</span>
-                          <span>{entry.topicTitle}</span>
-                          <span className="font-semibold">{entry.handicapAfter}/100</span>
+                        <div key={entry.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                          <div className="flex items-center justify-between text-sm text-slate-700">
+                            <span>{new Date(entry.timestamp).toLocaleDateString('es-AR')}</span>
+                            <span>{entry.topicTitle}</span>
+                            <span className="font-semibold">{entry.handicapAfter}/100</span>
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-xs text-slate-500">Resolución histórica:</span>
+                            {entry.resolution === 'pendiente' ? (
+                              <>
+                                <button
+                                  onClick={() => handleResolveDecision(entry.id, 'acierto')}
+                                  className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-200 transition"
+                                >
+                                  Marcar acierto
+                                </button>
+                                <button
+                                  onClick={() => handleResolveDecision(entry.id, 'error')}
+                                  className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200 transition"
+                                >
+                                  Marcar error
+                                </button>
+                              </>
+                            ) : (
+                              <span
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                  entry.resolution === 'acierto'
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : 'bg-rose-100 text-rose-700'
+                                }`}
+                              >
+                                {entry.resolution === 'acierto' ? 'Acierto validado' : 'Error validado'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
