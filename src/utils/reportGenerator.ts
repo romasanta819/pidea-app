@@ -17,6 +17,8 @@ const VARIABLE_LABELS: Record<string, string> = {
   inflacion_futura: 'Inflación futura esperada',
   pobreza: 'Pobreza',
   mortalidad_infantil: 'Mortalidad infantil',
+  presupuesto_educativo: 'Presupuesto educativo',
+  jubilados: 'Jubilados y pensionados',
 };
 
 export interface ScenarioChange {

@@ -42,6 +42,8 @@ const ADJUSTABLE_VARIABLES = [
   'inflacion_futura',
   'pobreza',
   'mortalidad_infantil',
+  'presupuesto_educativo',
+  'jubilados',
 ] as const;
 type AdjustableVariable = (typeof ADJUSTABLE_VARIABLES)[number];
 
@@ -155,6 +157,20 @@ const VARIABLE_DETAILS: VariableDetails = {
     step: 0.1,
     highlightClass: 'border-teal-400',
   },
+  presupuesto_educativo: {
+    label: 'Presupuesto educativo',
+    description: 'Gasto público en educación sobre el PIB',
+    unit: '%',
+    step: 0.1,
+    highlightClass: 'border-violet-400',
+  },
+  jubilados: {
+    label: 'Jubilados y pensionados',
+    description: 'Beneficiarios del SIPA en edad de jubilación (ANSES)',
+    unit: 'mill.',
+    step: 0.05,
+    highlightClass: 'border-stone-400',
+  },
 };
 
 const SUMMARY_VARIABLES: AdjustableVariable[] = [
@@ -166,6 +182,8 @@ const SUMMARY_VARIABLES: AdjustableVariable[] = [
   'salarios_reales',
   'pobreza',
   'mortalidad_infantil',
+  'presupuesto_educativo',
+  'jubilados',
 ];
 
 const CHART_VARIABLES: AdjustableVariable[] = [...ADJUSTABLE_VARIABLES];
@@ -185,6 +203,8 @@ const LINE_COLOURS = [
   '#d946ef',
   '#4ade80',
   '#dc2626',
+  '#7c3aed',
+  '#64748b',
 ];
 
 const formatDisplayValue = (variable: AdjustableVariable, value: number) => {

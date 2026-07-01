@@ -33,6 +33,8 @@ export const VARIABLE_LIMITS: VariableLimits = {
   salarios_reales: { min: 20, max: 200 },
   inflacion_futura: { min: 0, max: 300 },
   mortalidad_infantil: { min: 5, max: 30 },
+  presupuesto_educativo: { min: 3, max: 6.5 },
+  jubilados: { min: 2.5, max: 10 },
 };
 
 // Función para calcular cambios porcentuales entre períodos consecutivos
@@ -133,6 +135,8 @@ function calculateSensitivityCoefficients(changes: Array<{[key: string]: number}
   if (!matrix.inversion_bruta) matrix.inversion_bruta = {};
   if (!matrix.riesgo_pais) matrix.riesgo_pais = {};
   if (!matrix.pib) matrix.pib = {};
+  if (!matrix.presupuesto_educativo) matrix.presupuesto_educativo = {};
+  if (!matrix.jubilados) matrix.jubilados = {};
   
   // Agregar relaciones económicas conocidas si los datos históricos no las capturan bien
   // FORZAR relaciones más fuertes para hacer la propagación más visible
@@ -165,6 +169,42 @@ function calculateSensitivityCoefficients(changes: Array<{[key: string]: number}
   if (Math.abs(matrix.pib?.salarios_reales || 0) < 0.2) matrix.pib.salarios_reales = 0.4;
   if (Math.abs(matrix.pib?.consumo_carne || 0) < 0.2) matrix.pib.consumo_carne = 0.3;
   if (Math.abs(matrix.pib?.automoviles_vendidos || 0) < 0.2) matrix.pib.automoviles_vendidos = 0.35;
+  if (Math.abs(matrix.pib?.presupuesto_educativo || 0) < 0.2) matrix.pib.presupuesto_educativo = 0.25;
+
+  // Presupuesto educativo: más gasto en educación mejora indicadores sociales y presiona finanzas
+  if (Math.abs(matrix.presupuesto_educativo?.mortalidad_infantil || 0) < 0.2) matrix.presupuesto_educativo.mortalidad_infantil = -0.2;
+  if (Math.abs(matrix.presupuesto_educativo?.pobreza || 0) < 0.2) matrix.presupuesto_educativo.pobreza = -0.35;
+  if (Math.abs(matrix.presupuesto_educativo?.desempleo || 0) < 0.2) matrix.presupuesto_educativo.desempleo = -0.2;
+  if (Math.abs(matrix.presupuesto_educativo?.salarios_reales || 0) < 0.2) matrix.presupuesto_educativo.salarios_reales = 0.25;
+  if (Math.abs(matrix.presupuesto_educativo?.deuda_publica || 0) < 0.2) matrix.presupuesto_educativo.deuda_publica = 0.15;
+  if (Math.abs(matrix.presupuesto_educativo?.inversion_bruta || 0) < 0.2) matrix.presupuesto_educativo.inversion_bruta = 0.15;
+
+  // Austeridad y crisis reducen gasto educativo (% PIB)
+  if (Math.abs(matrix.deuda_publica?.presupuesto_educativo || 0) < 0.2) matrix.deuda_publica.presupuesto_educativo = -0.2;
+  if (Math.abs(matrix.riesgo_pais?.presupuesto_educativo || 0) < 0.2) matrix.riesgo_pais.presupuesto_educativo = -0.25;
+  if (Math.abs(matrix.ipc?.presupuesto_educativo || 0) < 0.2) matrix.ipc.presupuesto_educativo = -0.15;
+  if (Math.abs(matrix.desempleo?.presupuesto_educativo || 0) < 0.2) matrix.desempleo.presupuesto_educativo = -0.18;
+  if (Math.abs(matrix.pobreza?.presupuesto_educativo || 0) < 0.2) matrix.pobreza.presupuesto_educativo = -0.12;
+
+  // Jubilados SIPA: envejecimiento y gasto previsional presionan finanzas y mercado laboral
+  if (Math.abs(matrix.jubilados?.deuda_publica || 0) < 0.2) matrix.jubilados.deuda_publica = 0.35;
+  if (Math.abs(matrix.jubilados?.ipc || 0) < 0.2) matrix.jubilados.ipc = 0.2;
+  if (Math.abs(matrix.jubilados?.desempleo || 0) < 0.2) matrix.jubilados.desempleo = -0.15;
+  if (Math.abs(matrix.jubilados?.inversion_bruta || 0) < 0.2) matrix.jubilados.inversion_bruta = -0.2;
+  if (Math.abs(matrix.jubilados?.salarios_reales || 0) < 0.2) matrix.jubilados.salarios_reales = -0.25;
+  if (Math.abs(matrix.jubilados?.riesgo_pais || 0) < 0.2) matrix.jubilados.riesgo_pais = 0.2;
+  if (Math.abs(matrix.jubilados?.presupuesto_educativo || 0) < 0.2) matrix.jubilados.presupuesto_educativo = -0.15;
+  if (Math.abs(matrix.jubilados?.pib || 0) < 0.2) matrix.jubilados.pib = 0.15;
+
+  if (Math.abs(matrix.deuda_publica?.jubilados || 0) < 0.2) matrix.deuda_publica.jubilados = 0.25;
+  if (Math.abs(matrix.ipc?.jubilados || 0) < 0.2) matrix.ipc.jubilados = 0.18;
+  if (Math.abs(matrix.desempleo?.jubilados || 0) < 0.2) matrix.desempleo.jubilados = -0.12;
+  if (Math.abs(matrix.pib?.jubilados || 0) < 0.2) matrix.pib.jubilados = 0.2;
+  if (Math.abs(matrix.salarios_reales?.jubilados || 0) < 0.2) matrix.salarios_reales.jubilados = -0.15;
+  if (Math.abs(matrix.inversion_bruta?.jubilados || 0) < 0.2) matrix.inversion_bruta.jubilados = -0.18;
+  if (Math.abs(matrix.riesgo_pais?.jubilados || 0) < 0.2) matrix.riesgo_pais.jubilados = 0.15;
+  if (Math.abs(matrix.presupuesto_educativo?.jubilados || 0) < 0.2) matrix.presupuesto_educativo.jubilados = -0.1;
+  if (Math.abs(matrix.pobreza?.jubilados || 0) < 0.2) matrix.pobreza.jubilados = -0.1;
 
   return matrix;
 }
