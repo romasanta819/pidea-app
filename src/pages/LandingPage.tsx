@@ -362,9 +362,11 @@ const LandingPage: React.FC = () => {
       <header className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg transform hover:scale-105 transition">
-              <span className="text-white font-bold text-xl">PI</span>
-            </div>
+            <img
+              src="/brand/polia-restauracion-fiel-master.png"
+              alt="Emblema de POLIA"
+              className="w-12 h-12 rounded-full object-cover object-center shadow-md transform hover:scale-105 transition"
+            />
             <div>
               <h1 className="text-xl font-bold text-slate-900">POLIA</h1>
               <p className="text-xs text-slate-500">Política + Inteligencia Artificial</p>

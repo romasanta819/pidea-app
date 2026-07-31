@@ -1,4 +1,4 @@
-# Partido Científico - Laboratorio de Simulación Económica
+# POLIA — Política + Inteligencia Artificial
 
 **Política basada en evidencia científica. Transparencia total. Democracia directa.**
 
@@ -9,7 +9,7 @@ El Partido Científico propone un nuevo modelo de política donde cada decisión
 ## 🚀 Características Principales
 
 ### Laboratorio de Simulación Económica
-- **14 variables económicas** ajustables con propagación en cascada
+- **17 variables económicas y sociales** ajustables con propagación en cascada
 - **Cálculo automático** basado en correlaciones históricas reales
 - **Validación de coherencia** automática de resultados
 - **Generación de informes** escritos automáticos

@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local design experiments (kept outside version control)
+/scripts/
+/public/brand/*
+!/public/brand/polia-restauracion-fiel-master.png
+!/public/brand/polia-restauracion-fiel-master.pdf
+__pycache__/
